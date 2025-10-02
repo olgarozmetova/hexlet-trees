@@ -1,0 +1,24 @@
+{
+  "name": "trees",
+  "version": "1.0.0",
+  "description": "trees",
+  "license": "ISC",
+  "author": "Olga",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "lint": "npx eslint --fix .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@hexlet/immutable-fs-trees": "^0.7.2",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@eslint/create-config": "^1.10.0",
+    "@eslint/js": "^9.36.0",
+    "@stylistic/eslint-plugin": "^5.4.0",
+    "eslint": "^9.36.0",
+    "globals": "^16.4.0"
+  }
+}
