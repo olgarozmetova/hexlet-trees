@@ -69,7 +69,7 @@ const tree3 = fsTrees.mkdir('/', [
 ])
 
 const children3 = fsTrees.getChildren(tree3)
-const newChildren3 = children3.map((child) => {
+const newChildren3 = children3.map(child => {
   const name = fsTrees.getName(child)
   const newMeta3 = _.cloneDeep(fsTrees.getMeta(child))
   if (fsTrees.isDirectory(child)) {
@@ -111,3 +111,64 @@ console.log(tree6)
 // =>   meta: {},
 // =>   type: 'directory'
 // => }
+
+// Обход в глубину (Depth-first search)
+
+const treeA = fsTrees.mkdir('/', [
+  fsTrees.mkdir('etc', [
+    fsTrees.mkfile('bashrc'),
+    fsTrees.mkfile('consul.cfg'),
+  ]),
+  fsTrees.mkfile('hexletrc'),
+  fsTrees.mkdir('bin', [fsTrees.mkfile('ls'), fsTrees.mkfile('cat')]),
+])
+
+const dfs = treeA => {
+  // Распечатываем содержимое узла
+  console.log(fsTrees.getName(treeA))
+  // Если это файл, то возвращаем управление
+  if (fsTrees.isFile(treeA)) {
+    return
+  }
+
+  // Получаем детей
+  const children = fsTrees.getChildren(treeA)
+
+  // Применяем функцию dfs ко всем дочерним элементам
+  // Множество рекурсивных вызовов в рамках одного вызова функции
+  // называется древовидной рекурсией
+  children.forEach(dfs)
+}
+
+dfs(treeA)
+// => /
+// => etc
+// => bashrc
+// => consul.cfg
+// => hexletrc
+// => bin
+// => ls
+// => cat
+
+const changeOwner = (tree, owner) => {
+  const name = fsTrees.getName(tree)
+  const newMeta = _.cloneDeep(fsTrees.getMeta(tree))
+  newMeta.owner = owner
+
+  if (fsTrees.isFile(tree)) {
+    // Возвращаем обновлённый файл
+    return fsTrees.mkfile(name, newMeta)
+  }
+  // Дальше идет работа, если директория
+
+  const children = fsTrees.getChildren(tree)
+  // Ключевая строчка
+  // Вызываем рекурсивное обновление каждого ребёнка
+  const newChildren = children.map(child => changeOwner(child, owner))
+  const newTree = fsTrees.mkdir(name, newChildren, newMeta)
+
+  // Возвращаем обновлённую директорию
+  return newTree
+}
+
+changeOwner()

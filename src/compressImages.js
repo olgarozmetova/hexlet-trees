@@ -25,4 +25,4 @@ export const compressImages = (node) => {
   return fsTrees.mkdir(fsTrees.getName(node), newChildren, newMeta)
 }
 
-const newTree = compressImages(tree)
+compressImages(tree)
