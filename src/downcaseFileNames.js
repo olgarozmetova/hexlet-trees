@@ -20,6 +20,8 @@ const downcaseFileNames = (node) => {
   return fsTrees.mkdir(name, newChildren, newMeta)
 }
 
+export default downcaseFileNames
+
 downcaseFileNames(tree)
 
 // {
