@@ -69,7 +69,7 @@ const tree3 = fsTrees.mkdir('/', [
 ])
 
 const children3 = fsTrees.getChildren(tree3)
-const newChildren3 = children3.map(child => {
+const newChildren3 = children3.map((child) => {
   const name = fsTrees.getName(child)
   const newMeta3 = _.cloneDeep(fsTrees.getMeta(child))
   if (fsTrees.isDirectory(child)) {
@@ -123,7 +123,7 @@ const treeA = fsTrees.mkdir('/', [
   fsTrees.mkdir('bin', [fsTrees.mkfile('ls'), fsTrees.mkfile('cat')]),
 ])
 
-const dfs = treeA => {
+const dfs = (treeA) => {
   // Распечатываем содержимое узла
   console.log(fsTrees.getName(treeA))
   // Если это файл, то возвращаем управление
@@ -172,3 +172,75 @@ const changeOwner = (tree, owner) => {
 }
 
 changeOwner()
+
+// Агрегация данных — это самая важная операция при работе с деревьями
+// Здесь мы хотим узнать, сколько всего файлов и директорий содержится в нашем файловом дереве
+
+const treeB = fsTrees.mkdir('/', [
+  fsTrees.mkdir('etc', [
+    fsTrees.mkfile('bashrc'),
+    fsTrees.mkfile('consul.cfg'),
+  ]),
+  fsTrees.mkfile('hexletrc'),
+  fsTrees.mkdir('bin', [fsTrees.mkfile('ls'), fsTrees.mkfile('cat')]),
+])
+
+// В реализации используем рекурсивный процесс,
+// чтобы добраться до самого дна дерева
+const getNodesCount = (treeB) => {
+  if (fsTrees.isFile(treeB)) {
+    // Возвращаем `1` для учёта текущего файла
+    return 1
+  }
+
+  // Если узел — директория, получаем его потомков
+  const children = fsTrees.getChildren(treeB)
+  // Здесь начинается самая сложная часть
+  // Считаем количество потомков для каждого из потомков,
+  // рекурсивно вызывая нашу функцию `getNodesCount`
+  const descendantCounts = children.map(getNodesCount)
+  // Возвращаем `1` (текущая директория) + общее количество потомков
+  return 1 + _.sum(descendantCounts)
+}
+
+getNodesCount(treeB) // 8
+
+// Напишем функцию, которая принимает на вход директорию и возвращает список директорий первого уровня вложенности и количество файлов внутри каждой из них, включая все поддиректории
+
+const treeC = fsTrees.mkdir('/', [
+  fsTrees.mkdir('etc', [
+    fsTrees.mkdir('apache'),
+    fsTrees.mkdir('nginx', [fsTrees.mkfile('nginx.conf')]),
+  ]),
+  fsTrees.mkdir('consul', [
+    fsTrees.mkfile('config.json'),
+    fsTrees.mkfile('file.tmp'),
+    fsTrees.mkdir('data'),
+  ]),
+  fsTrees.mkfile('hosts'),
+  fsTrees.mkfile('resolve'),
+])
+
+const getFilesCount = (node) => {
+  if (fsTrees.isFile(node)) {
+    return 1
+  }
+
+  const children = fsTrees.getChildren(node)
+  const descendantCounts = children.map(getFilesCount)
+  return _.sum(descendantCounts)
+}
+
+const getSubdirectoriesInfo = (treeC) => {
+  const children = fsTrees.getChildren(treeC)
+  const result = children
+    // Нас интересуют только директории
+    .filter(fsTrees.isDirectory)
+    // Запускаем подсчёт для каждой директории
+    .map(child => [fsTrees.getName(child), getFilesCount(child)])
+
+  return result
+}
+
+console.log(getSubdirectoriesInfo(treeC))
+// => [['etc', 1], ['consul', 2]]

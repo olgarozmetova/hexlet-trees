@@ -9,7 +9,7 @@ const tree = fsTrees.mkdir('/', [
   fsTrees.mkfile('hOsts'),
 ])
 
-const downcaseFileNames = node => {
+const downcaseFileNames = (node) => {
   const newMeta = _.cloneDeep(fsTrees.getMeta(node))
   const name = fsTrees.getName(node)
   if (fsTrees.isFile(node)) {
