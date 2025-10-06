@@ -244,3 +244,88 @@ const getSubdirectoriesInfo = (treeC) => {
 
 console.log(getSubdirectoriesInfo(treeC))
 // => [['etc', 1], ['consul', 2]]
+
+// Aккумулятор - собирает нужные данные во время обхода дерева
+// найдём все пустые директории в нашей файловой системе
+
+const treeD = fsTrees.mkdir('/', [
+  fsTrees.mkdir('etc', [
+    fsTrees.mkdir('apache'),
+    fsTrees.mkdir('nginx', [fsTrees.mkfile('nginx.conf')]),
+    fsTrees.mkdir('consul', [
+      fsTrees.mkfile('config.json'),
+      fsTrees.mkdir('data'),
+    ]),
+  ]),
+  fsTrees.mkdir('logs'),
+  fsTrees.mkfile('hosts'),
+])
+
+const findEmptyDirPaths = (treeD) => {
+  const name = fsTrees.getName(treeD)
+  const children = fsTrees.getChildren(treeD)
+  // Если детей нет, то добавляем директорию
+  if (children.length === 0) {
+    return name
+  }
+
+  // Фильтруем файлы, они нас не интересуют
+  const emptyDirNames = children
+    .filter(child => !fsTrees.isFile(child))
+    // Ищем пустые директории внутри текущей
+    // flatMap выправляет массив, так что он остаётся плоским
+    .flatMap(findEmptyDirPaths)
+
+  return emptyDirNames
+}
+
+findEmptyDirPaths(treeD) // ['apache', 'data', 'logs']
+
+// найдём все пустые директории в нашей файловой системе с максимальной глубиной поиска 2 уровня. То есть директории /logs и /etc/apache подходят под это условие, а вот /etc/consul/data — нет
+
+const findEmptyDirPaths2 = (treeD) => {
+  // Внутренняя функция, которая может передавать аккумулятор
+  // В качестве аккумулятора выступает depth, переменная, содержащая текущую глубину
+  const iter = (node, depth) => {
+    const name = fsTrees.getName(node)
+    const children = fsTrees.getChildren(node)
+
+    // Если директория пустая, то добавляем ее в список
+    if (children.length === 0) {
+      return name
+    }
+
+    // Если это второй уровень вложенности, и директория не пустая
+    // то не имеет смысла смотреть дальше
+    if (depth === 2) {
+      // Почему возвращается именно пустой массив?
+      // Потому что снаружи выполняется flat
+      // Он раскрывает пустые массивы
+      return []
+    }
+
+    // Оставляем только директории
+    return (
+      children
+        .filter(fsTrees.isDirectory)
+        // Не забываем увеличивать глубину
+        .flatMap(child => iter(child, depth + 1))
+    )
+  }
+
+  // Начинаем с глубины 0
+  return iter(treeD, 0)
+}
+
+findEmptyDirPaths2(treeD) // ['apache', 'logs']
+
+// Можно пойти еще дальше и позволить указывать максимальную глубину снаружи:
+// const findEmptyDirPaths = (tree, maxDepth = 2) => {
+// ...
+// }
+
+// а как сделать так, чтобы по умолчанию просматривалось всё дерево? Использовать в качестве значения по умолчанию бесконечность Infinity:
+
+// const findEmptyDirPaths = (tree, maxDepth = Infinity) => {
+// ...
+// }
